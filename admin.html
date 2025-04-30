@@ -60,7 +60,7 @@
       };
       const jsonData = JSON.stringify(payload, null, 2);
       const encodedContent = btoa(unescape(encodeURIComponent(jsonData)));
-      const token = "ТОКЕН";  // ← ВСТАВЬТЕ СЮДА ВАШ ТОКЕН
+      const token = "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";  // ← ВСТАВЬТЕ СЮДА ВАШ ТОКЕН
 
       fetch('https://api.github.com/repos/orshabsh/schedule/contents/schedule.json', {
         method: "PUT",
