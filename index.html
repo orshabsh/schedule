@@ -34,7 +34,7 @@
     let scheduleData = {};
 
     function loadSchedule() {
-      fetch("https://orshabsh.github.io/schedule/schedule.json")
+      fetch("https://raw.githubusercontent.com/orshabsh/schedule/main/schedule.json")
         .then(res => res.json())
         .then(data => {
           scheduleData = data.schedule;
