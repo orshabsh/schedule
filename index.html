@@ -35,11 +35,11 @@
 
     function loadSchedule() {
       fetch("https://raw.githubusercontent.com/orshabsh/schedule/main/schedule.json")
-        .then(res => res.json())
-        .then(data => {
-          scheduleData = data.schedule;
-          populateSelectors(data.classes);
-        });
+  .then(res => res.json())
+  .then(data => {
+    const { classes, days, lesson_times, schedule } = data;
+    // Далее используйте эти данные для отображения
+  });
     }
 
     function populateSelectors(classes) {
