@@ -7,7 +7,7 @@
 
 window.SUPABASE_CONFIG = {
   url: "https://kdpadhpqnboqgftikolb.supabase.co",
-  anonKey: "sb_publishable__igllkiRCrYi51dskBnv3A_fBTnzkai",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkcGFkaHBxbmJvcWdmdGlrb2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMDUxOTQsImV4cCI6MjA4NDU4MTE5NH0.lu8Lzip28WKLsLt2Zn-GpufPpJiGeijpQ4iBIRMQv7k",
   // schoolDataId — первичный ключ строки в таблице school_data
   schoolDataId: 1,
 };
