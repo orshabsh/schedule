@@ -4,4 +4,4 @@
 
 *Разработчик сайта:* Костянко Д.А. · Витебск, 2026.
 
-[https://orshabsh.github.io/schedule/login.html (1)]
+[Вход в систему](https://orshabsh.github.io/schedule/login.html)
