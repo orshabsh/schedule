@@ -340,11 +340,11 @@ table.mini input:focus, table.mini select:focus{
 @media (max-width: 700px){.grid2{grid-template-columns:1fr}}
 
 .label{
+  top: 8px;
   font-size:14px;
   color:var(--muted);
   margin-bottom:8px;
   display:block;
-  line-height:1.4;
   padding:0 4px;
 }
 .grid2 input{
