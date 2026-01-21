@@ -1186,25 +1186,24 @@ function openSettingsModal() {
     if (newSubjects.length) s.subjects = Array.from(new Set(newSubjects));
 
     // passwords (Supabase Auth: меняем только свой)
-    if (hasSupabase) {
-      const p1 = $("#pwNew")?.value || "";
-      const p2 = $("#pwNew2")?.value || "";
-      if (p1 || p2) {
-        if (p1.length < 6) {
-          toast("Пароль должен быть не короче 6 символов", "err");
-          return;
-        }
-        if (p1 !== p2) {
-          toast("Пароли не совпадают", "err");
-          return;
-        }
-        const { error } = await sbApi.sbUpdateMyPassword(p1);
-        if (error) {
-          toast("Не удалось сменить пароль: " + (error.message || "ошибка"), "err");
-          return;
-        }
-      }
-    }
+$("#mApply").addEventListener("click", async () => {
+  const p1 = $("#newPass1").value;
+  const p2 = $("#newPass2").value;
+
+  if (!p1 || p1 !== p2) {
+    toast("Пароли не совпадают");
+    return;
+  }
+
+  const { error } = await sbApi.sbUpdateMyPassword(p1);
+
+  if (error) {
+    toast("Ошибка смены пароля: " + error.message);
+  } else {
+    toast("Пароль успешно изменён");
+  }
+});
+
 
     closeModal();
     hydrateControls();
