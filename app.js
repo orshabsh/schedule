@@ -13,10 +13,14 @@ const ROLE_LABEL = {
   deputy: "Завуч",
   teacher: "Учитель",
   user: "Пользователь",
+  public: "Публичный просмотр",
 };
 
 const CAN_EDIT_SCHEDULE = new Set(["admin", "deputy"]);
 const CAN_EDIT_SETTINGS = new Set(["admin"]);
+
+// Если Supabase настроен — авторизация/права берём оттуда.
+// Локальные "пароли ролей" оставлены только для офлайн-режима (без Supabase).
 
 // Пароли (локально).
 // По умолчанию — демо-значения. Фактические пароли читаются из localStorage.
@@ -79,7 +83,6 @@ const DB_DEFAULT = {
     teachers: [
       { id: "t1", name: "Орлова И.Н." },
       { id: "t2", name: "Мильто Ю.П." },
-      { id: "t3", name: "Шукалович С.И." },
     ],
     subjects: [
       "Математика",
@@ -176,6 +179,36 @@ function clearSession() {
 let dbData = null;
 let dbHandle = null;
 
+// Supabase helpers
+function sbEnabled() {
+  return !!window.sbApi?.getSbConfig?.();
+}
+
+async function loadData() {
+  if (sbEnabled()) {
+    try {
+      const data = await window.sbApi.sbLoadSchoolData();
+      dbData = data ? data : structuredClone(DB_DEFAULT);
+      return;
+    } catch (e) {
+      console.error(e);
+      dbData = structuredClone(DB_DEFAULT);
+      toast("Supabase недоступен — загружены демо-данные", "warn");
+      return;
+    }
+  }
+  await loadDbAuto();
+}
+
+async function saveData() {
+  if (sbEnabled()) {
+    await window.sbApi.sbSaveSchoolData(dbData);
+    toast("Сохранено в Supabase", "ok");
+    return;
+  }
+  await saveDb();
+}
+
 async function openDbPicker() {
   if (!window.showOpenFilePicker) {
     toast("Этот браузер не поддерживает запись в JSON-файл. Используйте Edge/Chrome.", "err");
@@ -218,6 +251,21 @@ async function loadDbFromHandle() {
 }
 
 async function loadDbAuto() {
+  // Если Supabase настроен — пробуем грузить оттуда.
+  try {
+    const sbApi = window.sbApi;
+    if (sbApi?.getSbConfig?.()) {
+      const data = await sbApi.sbLoadSchoolData();
+      if (data) {
+        dbData = data;
+        dbHandle = null;
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn("Supabase load failed, fallback to local", e);
+  }
+
   dbHandle = await idbGet("dbHandle");
   if (!dbHandle) {
     dbData = structuredClone(DB_DEFAULT);
@@ -237,8 +285,23 @@ async function loadDbAuto() {
 }
 
 async function saveDb() {
+  // Приоритет — Supabase
+  try {
+    const sbApi = window.sbApi;
+    if (sbApi?.getSbConfig?.()) {
+      await sbApi.sbSaveSchoolData(dbData);
+      toast("Сохранено в Supabase", "ok");
+      return;
+    }
+  } catch (e) {
+    console.error(e);
+    toast("Ошибка сохранения в Supabase", "err");
+    return;
+  }
+
+  // Фолбэк: локальный JSON (старый режим)
   if (!dbHandle) {
-    toast("Сначала откройте db.json (кнопка «Открыть базу»)", "warn");
+    toast("Supabase не настроен. Для локального режима сначала выберите db.json (кнопка «Импорт JSON»)", "warn");
     return;
   }
   const writable = await dbHandle.createWritable();
@@ -315,40 +378,39 @@ function fmtSubjectNote(x) {
 // Login page
 // ------------------------------
 function initLogin() {
-  const roleSel = $("#roleSelect");
-  const passWrap = $("#passwordWrap");
+  const emailInp = $("#emailInput");
   const passInp = $("#passwordInput");
   const btn = $("#btnLogin");
+  const btnGuest = $("#btnGuest");
 
-  const update = () => {
-    const role = roleSel.value;
-    const needPass = role !== "user";
-    passWrap.style.display = needPass ? "block" : "none";
-    if (!needPass) passInp.value = "";
-  };
-
-  roleSel.addEventListener("change", update);
-  update();
-
-  btn.addEventListener("click", () => {
-    const role = roleSel.value;
-    if (role === "user") {
-      setSession("user");
+  btn?.addEventListener("click", async () => {
+    const sbApi = window.sbApi;
+    const cfgOk = sbApi?.getSbConfig?.();
+    if (!cfgOk) {
+      toast("Supabase не настроен: создайте config.js (см. config.example.js)", "err");
+      return;
+    }
+    const email = (emailInp?.value || "").trim();
+    const password = passInp?.value || "";
+    if (!email || !password) {
+      toast("Введите email и пароль", "warn");
+      return;
+    }
+    try {
+      const { error } = await sbApi.sbSignIn(email, password);
+      if (error) {
+        toast("Не удалось войти: " + (error.message || "ошибка"), "err");
+        return;
+      }
       location.href = "dashboard.html";
-      return;
+    } catch (e) {
+      console.error(e);
+      toast("Ошибка входа", "err");
     }
-    const pw = getPasswords();
-    const p = passInp.value || "";
-    if (p !== (pw[role] || "")) {
-      toast("Неверный пароль", "err");
-      return;
-    }
-    setSession(role);
-    location.href = "dashboard.html";
   });
 
-  $("#btnGuest")?.addEventListener("click", () => {
-    setSession("user");
+  btnGuest?.addEventListener("click", () => {
+    // Публичный просмотр без входа
     location.href = "dashboard.html";
   });
 }
@@ -365,39 +427,81 @@ let state = {
 };
 
 function initDashboard() {
-  const session = getSession();
-  if (!session?.role) {
-    location.href = "login.html";
-    return;
-  }
-  state.role = session.role;
+  const sbApi = window.sbApi;
+  const cfgOk = sbApi?.getSbConfig?.();
+  const sbStatus = $("#sbStatus");
+  if (sbStatus) sbStatus.textContent = cfgOk ? "· Supabase" : "· локальный режим";
+
+  // По умолчанию: публичный просмотр
+  state.role = "public";
   $("#roleBadge").textContent = ROLE_LABEL[state.role] || state.role;
 
-  $("#btnLogout").addEventListener("click", () => {
-    clearSession();
+  $("#btnLogin")?.addEventListener("click", () => {
     location.href = "login.html";
   });
 
-  // teacher/user: скрываем элементы управления редактированием
-  const isEditor = CAN_EDIT_SCHEDULE.has(state.role);
-  $("#editHint").textContent = isEditor
-    ? "Режим: редактирование разрешено"
-    : "Режим: только просмотр";
+  $("#btnLogout")?.addEventListener("click", async () => {
+    try {
+      await sbApi?.sbSignOut?.();
+    } finally {
+      location.reload();
+    }
+  });
 
-  // загрузка базы
-  loadDbAuto().then(() => {
+
+  // Bootstrap: роль + загрузка данных
+  (async () => {
+    let loggedIn = false;
+    let role = "public";
+
+    if (cfgOk) {
+      const sess = await sbApi.sbGetSession();
+      loggedIn = !!sess?.session;
+      if (loggedIn) {
+        const prof = await sbApi.sbGetMyProfile();
+        // если профиль не заведен, считаем ролью teacher (просмотр)
+        role = prof?.role || "teacher";
+      }
+    }
+
+    state.role = role;
+    $("#roleBadge").textContent = ROLE_LABEL[state.role] || state.role;
+
+    const isEditor = CAN_EDIT_SCHEDULE.has(state.role);
+    $("#editHint").textContent = isEditor ? "Режим: редактирование" : "Режим: просмотр";
+
+    // teacher: по умолчанию показываем расписание учителя
+    if (state.role === "teacher") {
+      state.viewMode = "byTeacher";
+      const vm = $("#viewMode");
+      if (vm) vm.value = "byTeacher";
+    }
+
+    updateEditorUi();
+
+    await loadDbAuto();
     hydrateControls();
     renderSchedule();
     updateEditorUi();
-  });
+  })();
 
   $("#btnOpenDb").addEventListener("click", async () => {
+    // Импорт JSON разрешён только редакторам (admin/deputy)
+    if (!CAN_EDIT_SCHEDULE.has(state.role) && !CAN_EDIT_SETTINGS.has(state.role)) {
+      toast("Импорт доступен только после входа (завуч/админ)", "err");
+      return;
+    }
     try {
       await openDbPicker();
+      // Если Supabase настроен — сразу пушим импортированную базу в БД.
+      const cfgOk = window.sbApi?.getSbConfig?.();
+      if (cfgOk) {
+        await saveDb();
+      }
       hydrateControls();
       renderSchedule();
       updateEditorUi();
-      toast("База открыта", "ok");
+      toast(cfgOk ? "Импортировано в Supabase" : "База открыта", "ok");
     } catch (e) {
       console.error(e);
       toast("Не удалось открыть файл", "err");
@@ -459,6 +563,17 @@ function updateEditorUi() {
   $("#btnSave").style.display = (isEditor || canSettings) ? "inline-flex" : "none";
   $("#btnManage").style.display = isEditor ? "inline-flex" : "none";
   $("#btnSettings").style.display = canSettings ? "inline-flex" : "none";
+
+  // Импорт JSON — только редактор (и только как ручной импорт/миграция)
+  const imp = $("#btnOpenDb");
+  if (imp) imp.style.display = (isEditor || canSettings) ? "inline-flex" : "none";
+
+  // Вход/выход
+  const btnLogin = $("#btnLogin");
+  const btnLogout = $("#btnLogout");
+  const isPublic = state.role === "public";
+  if (btnLogin) btnLogin.style.display = isPublic ? "inline-flex" : "none";
+  if (btnLogout) btnLogout.style.display = isPublic ? "none" : "inline-flex";
 
   // view controls
   const byClass = state.viewMode === "byClass";
@@ -897,7 +1012,7 @@ function openEditCellModal(td) {
     td.title = "";
     closeModal();
   });
-  $("#mApply").addEventListener("click", () => {
+  $("#mApply").addEventListener("click", async () => {
     const val = denormalizeCell(readRows());
     setCell(termId, classId, day, lessonNo, val);
     td.innerHTML = renderClassCellHtml(val);
@@ -915,7 +1030,8 @@ function openSettingsModal() {
     return;
   }
   const s = dbData.settings;
-  const pw = getPasswords();
+  const sbApi = window.sbApi;
+  const hasSupabase = !!sbApi?.getSbConfig?.();
 
   const bellRows = s.bellSchedule
     .sort((a, b) => a.lesson - b.lesson)
@@ -985,21 +1101,26 @@ function openSettingsModal() {
       </div>
 
       <div class="tabPanel" id="tab-passwords" style="display:none">
-        <div class="muted" style="margin:6px 0 10px">Изменения паролей вступают в силу сразу (и сохраняются в db.json после «Сохранить базу»).</div>
-        <div class="grid2">
-          <div>
-            <div class="label">Пароль администратора</div>
-            <input id="pwAdmin" type="password" value="${escapeAttr(pw.admin)}"/>
-          </div>
-          <div>
-            <div class="label">Пароль завуча</div>
-            <input id="pwDeputy" type="password" value="${escapeAttr(pw.deputy)}"/>
-          </div>
-          <div>
-            <div class="label">Пароль учителя</div>
-            <input id="pwTeacher" type="password" value="${escapeAttr(pw.teacher)}"/>
-          </div>
+        <div class="muted" style="margin:6px 0 10px">
+          В этой версии пароли хранятся в Supabase Auth. Здесь можно сменить <b>свой</b> пароль.
+          Сброс паролей других пользователей (учителя/завуча) выполняется в Supabase Dashboard (или через Edge Function).
         </div>
+
+        ${hasSupabase ? `
+          <div class="grid2">
+            <div>
+              <div class="label">Новый пароль</div>
+              <input id="pwNew" type="password" placeholder="Новый пароль"/>
+            </div>
+            <div>
+              <div class="label">Повторите пароль</div>
+              <input id="pwNew2" type="password" placeholder="Повтор"/>
+            </div>
+          </div>
+          <div class="muted" style="margin-top:10px">Чтобы применить, нажмите «Применить».</div>
+        ` : `
+          <div class="muted">Supabase не настроен (нет config.js). Смена пароля недоступна.</div>
+        `}
       </div>
     `,
     `
@@ -1064,14 +1185,26 @@ function openSettingsModal() {
       .filter(Boolean);
     if (newSubjects.length) s.subjects = Array.from(new Set(newSubjects));
 
-    // passwords
-    const newPw = {
-      admin: $("#pwAdmin")?.value ?? pw.admin,
-      deputy: $("#pwDeputy")?.value ?? pw.deputy,
-      teacher: $("#pwTeacher")?.value ?? pw.teacher,
-    };
-    setPasswords(newPw);
-    dbData.meta.passwords = getPasswords();
+    // passwords (Supabase Auth: меняем только свой)
+    if (hasSupabase) {
+      const p1 = $("#pwNew")?.value || "";
+      const p2 = $("#pwNew2")?.value || "";
+      if (p1 || p2) {
+        if (p1.length < 6) {
+          toast("Пароль должен быть не короче 6 символов", "err");
+          return;
+        }
+        if (p1 !== p2) {
+          toast("Пароли не совпадают", "err");
+          return;
+        }
+        const { error } = await sbApi.sbUpdateMyPassword(p1);
+        if (error) {
+          toast("Не удалось сменить пароль: " + (error.message || "ошибка"), "err");
+          return;
+        }
+      }
+    }
 
     closeModal();
     hydrateControls();

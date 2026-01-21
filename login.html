@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Школьное расписание — вход</title>
   <link rel="stylesheet" href="styles.css"/>
+  <script src="config.js" onerror="/* optional */"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
 </head>
 <body data-page="login">
   <div class="container">
@@ -23,22 +26,19 @@
         <h2 style="margin:10px 10px 10px 10px">Вход</h2>
 
         <div class="form">
-          <label class="label">Роль</label>
-          <select id="roleSelect" class="input">
-            <option value="user">Пользователь (без пароля)</option>
-            <option value="teacher">Учитель</option>
-            <option value="deputy">Завуч</option>
-            <option value="admin">Администратор</option>
-          </select>
+          <p class="muted" style="margin:0 0 10px 0">
+            Расписание доступно публично. Вход нужен только для редактирования.
+          </p>
+
+          <label class="label">Email</label>
+          <input id="emailInput" class="input" type="email" placeholder="name@school.by" autocomplete="username"/>
 
           <label class="label">Пароль</label>
-          <div id="passwordWrap">
-		  <input id="passwordInput" class="input" type="password" placeholder="Только для ролей с паролем" autocomplete="current-password"/>
-		  </div>
+          <input id="passwordInput" class="input" type="password" placeholder="Пароль" autocomplete="current-password"/>
 
           <div class="row" style="margin-top:12px">
-            <button id="btnLogin" class="btn primary">Продолжить</button>
-            <button id="btnReset" class="btn">Сбросить сессию</button>
+            <button id="btnLogin" class="btn primary">Войти</button>
+            <button id="btnGuest" class="btn">Продолжить без входа</button>
           </div>
 
           <div id="msg" class="toast" style="display:none;margin-top:12px"></div>
@@ -58,12 +58,12 @@
       <div class="card">
         <h2 style="margin:10px 10px 10px 10px">Как это работает</h2>
         <ol class="muted" style="line-height:1.65;margin:30px 30px 30px 30px">
-          <li>Откройте <b>login.html</b>.</li>
-          <li>На dashboard нажмите <b>Открыть базу</b> и выберите файл <b>db.json</b>.</li>
-          <li>Сохранение идёт обратно в выбранный JSON (через File System Access API в Edge/Chrome).</li>
+          <li>Сайт размещается на GitHub Pages (статический хостинг).</li>
+          <li>Данные хранятся в Supabase (Postgres + Auth).</li>
+          <li>Публичный доступ — только чтение; редактирование — после входа (RLS в БД).</li>
         </ol>
         <p class="muted" style="margin:10px 10px 10px 10px">
-          Если браузер не поддерживает запись в файл (или вы открыли страницу не через HTTPS/localhost), можно скачать JSON вручную кнопкой «Экспорт JSON». 
+          Если Supabase ещё не настроен, можно временно открыть dashboard и работать с демо-данными локально.
         </p>
       </div>
     </div>
