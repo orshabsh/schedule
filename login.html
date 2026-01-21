@@ -26,12 +26,8 @@
         <h2 style="margin:10px 10px 10px 10px">Вход</h2>
 
         <div class="form">
-          <p class="muted" style="margin:0 0 10px 0">
-            Расписание доступно публично. Вход нужен только для редактирования.
-          </p>
-
           <label class="label">Email</label>
-          <input id="emailInput" class="input" type="email" placeholder="name@school.by" autocomplete="username"/>
+          <input id="emailInput" class="input" type="email" placeholder="name@net.bsh" autocomplete="username"/>
 
           <label class="label">Пароль</label>
           <input id="passwordInput" class="input" type="password" placeholder="Пароль" autocomplete="current-password"/>
@@ -47,23 +43,16 @@
           <!--<details>
             <summary class="muted">Тестовые пароли</summary>
             <div class="muted" style="margin-top:10px">
-              Администратор: <code>admin</code><br/>
-              Завуч: <code>deputy</code><br/>
-              Учитель: <code>teacher</code>
+
             </div>
           </details>-->
         </div>
       </div>
 
       <div class="card">
-        <h2 style="margin:10px 10px 10px 10px">Как это работает</h2>
-        <ol class="muted" style="line-height:1.65;margin:30px 30px 30px 30px">
-          <li>Сайт размещается на GitHub Pages (статический хостинг).</li>
-          <li>Данные хранятся в Supabase (Postgres + Auth).</li>
-          <li>Публичный доступ — только чтение; редактирование — после входа (RLS в БД).</li>
-        </ol>
+        <h2 style="margin:10px 10px 10px 10px">Инструкции во входу</h2>
         <p class="muted" style="margin:10px 10px 10px 10px">
-          Если Supabase ещё не настроен, можно временно открыть dashboard и работать с демо-данными локально.
+          Для просмотра расписания достаточно нажать на кнопку «Продолжить без входа». Для редактирования необходимо выполнить вход под своими учётными данными.
         </p>
       </div>
     </div>
