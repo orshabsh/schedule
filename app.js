@@ -1,11 +1,6 @@
 /*
-  Школьное расписание (локально, без сервера)
-  - Данные в JSON-файле (File System Access API).
+  Школьное расписание
   - Роли: admin, deputy, teacher, user.
-
-  ВАЖНО:
-  В браузере нельзя "тихо" записать файл на диск без явного доступа пользователя.
-  Поэтому при первом запуске нужно выбрать db.json через кнопку "Открыть базу".
 */
 
 const ROLE_LABEL = {
@@ -19,17 +14,7 @@ const ROLE_LABEL = {
 const CAN_EDIT_SCHEDULE = new Set(["admin", "deputy"]);
 const CAN_EDIT_SETTINGS = new Set(["admin"]);
 
-// Если Supabase настроен — авторизация/права берём оттуда.
-// Локальные "пароли ролей" оставлены только для офлайн-режима (без Supabase).
-
-// Пароли (локально).
-// По умолчанию — демо-значения. Фактические пароли читаются из localStorage.
-// Если открыта база db.json, пароли синхронизируются в dbData.meta.passwords и сохраняются вместе с базой.
-const PASSWORDS_DEFAULT = {
-  admin: "1779",
-  deputy: "1346",
-  teacher: "1234",
-};
+// Supabase авторизация
 
 function getPasswords() {
   try {
@@ -52,56 +37,6 @@ function setPasswords(pwObj) {
   };
   localStorage.setItem("sched_passwords", JSON.stringify(safe));
 }
-
-const DB_DEFAULT = {
-  meta: {
-    schoolName: "Школа",
-    activeTermId: "2025_H1",
-    passwords: { ...PASSWORDS_DEFAULT },
-    terms: [
-      { id: "2025_H1", name: "1 полугодие 2025/26", start: "2025-09-01", end: "2025-12-31" },
-      { id: "2025_H2", name: "2 полугодие 2025/26", start: "2026-01-09", end: "2026-05-31" },
-    ],
-  },
-  settings: {
-    lessonsPerDay: 7,
-    days: ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"],
-    bellSchedule: [
-      { lesson: 0, start: "08:00", end: "08:30", label: "Кл. час" },
-      { lesson: 1, start: "08:35", end: "09:20" },
-      { lesson: 2, start: "09:30", end: "10:15" },
-      { lesson: 3, start: "10:25", end: "11:10" },
-      { lesson: 4, start: "11:20", end: "12:05" },
-      { lesson: 5, start: "12:25", end: "13:10" },
-      { lesson: 6, start: "13:20", end: "14:05" },
-      { lesson: 7, start: "14:15", end: "15:00" },
-    ],
-    classes: [
-      { id: "5A", name: "5 «А»", room: "5", classTeacherId: "t1" },
-      { id: "5B", name: "5 «Б»", room: "3", classTeacherId: "t2" },
-    ],
-    teachers: [
-      { id: "t1", name: "Орлова И.Н." },
-      { id: "t2", name: "Мильто Ю.П." },
-    ],
-    subjects: [
-      "Математика",
-      "Русский язык",
-      "Белорусский язык",
-      "Английский язык",
-      "ФК и З",
-      "Информатика",
-      "ОБЖ",
-      "Кл. час",
-      "Трудовое обучение",
-      "История",
-      "Биология",
-    ],
-  },
-  timetable: {
-    
-  },
-};
 
 function $(sel, root = document) {
   return root.querySelector(sel);
@@ -375,6 +310,29 @@ function fmtSubjectNote(x) {
 }
 
 // ------------------------------
+// Sorting helpers (RU locale)
+// ------------------------------
+function ruSort(a, b) {
+  return String(a || "").localeCompare(String(b || ""), "ru", { sensitivity: "base" });
+}
+
+// Сортировка классов: сначала номер (1..11), затем буква (А, Б, В...), затем остаток.
+function parseClassName(name) {
+  const s = String(name || "").trim().toUpperCase();
+  const m = s.match(/^(\d+)\s*([А-ЯA-Z]?)(.*)$/u);
+  if (!m) return { n: 999, l: s, rest: "" };
+  return { n: parseInt(m[1], 10), l: m[2] || "", rest: m[3] || "" };
+}
+function classSort(a, b) {
+  const A = parseClassName(a?.name ?? a);
+  const B = parseClassName(b?.name ?? b);
+  if (A.n !== B.n) return A.n - B.n;
+  const l = A.l.localeCompare(B.l, "ru", { sensitivity: "base" });
+  if (l !== 0) return l;
+  return (A.rest || "").localeCompare(B.rest || "", "ru", { sensitivity: "base" });
+}
+
+// ------------------------------
 // Login page
 // ------------------------------
 function initLogin() {
@@ -586,44 +544,45 @@ function hydrateControls() {
   const st = $("#schoolTitle");
   if (st) st.textContent = (dbData?.meta?.schoolName || "Школа") + " — расписание";
 
-  // terms
+  // terms (sorted A–Я)
   const termSelect = $("#termSelect");
   termSelect.innerHTML = "";
-  for (const t of dbData.meta.terms) {
+  const termsSorted = [...(dbData.meta.terms || [])].sort((a, b) => ruSort(a?.name, b?.name));
+  for (const t of termsSorted) {
     const opt = document.createElement("option");
     opt.value = t.id;
-    opt.textContent = t.name;
+    opt.textContent = t.name || t.id;
     termSelect.appendChild(opt);
   }
   state.termId = state.termId || getActiveTermId();
   termSelect.value = state.termId;
-
-  // classes
+  // classes (sorted: number then letter)
   const classSelect = $("#classSelect");
   classSelect.innerHTML = "";
-  for (const c of dbData.settings.classes) {
+  const classesSorted = [...(dbData.settings.classes || [])].sort(classSort);
+  for (const c of classesSorted) {
     const opt = document.createElement("option");
     opt.value = c.id;
-    opt.textContent = c.name;
+    opt.textContent = c.name || c.id;
     classSelect.appendChild(opt);
   }
-  state.classId = state.classId || dbData.settings.classes[0]?.id || null;
+  state.classId = state.classId || classesSorted[0]?.id || null;
   if (state.classId) classSelect.value = state.classId;
-
-  // teachers
+  // teachers (sorted A–Я)
   const teacherSelect = $("#teacherSelect");
   teacherSelect.innerHTML = "";
   const optAll = document.createElement("option");
   optAll.value = "";
   optAll.textContent = "— Выберите учителя —";
   teacherSelect.appendChild(optAll);
-  for (const t of dbData.settings.teachers) {
+
+  const teachersSorted = [...(dbData.settings.teachers || [])].sort((a, b) => ruSort(a?.name, b?.name));
+  for (const t of teachersSorted) {
     const opt = document.createElement("option");
     opt.value = t.id;
-    opt.textContent = t.name;
+    opt.textContent = t.name || t.id;
     teacherSelect.appendChild(opt);
   }
-
   // default view mode for teacher role
   if (state.role === "teacher") {
     state.viewMode = "byTeacher";
@@ -760,6 +719,7 @@ function renderTeacherTable(termId, teacherId, days, lessonNos) {
   for (const day of days) items[day] = {};
 
   const classes = dbData.settings.classes;
+  const classesSorted = [...classes].sort(classSort);
   for (const c of classes) {
     for (const day of days) {
       for (const lessonNo of lessonNos) {
@@ -891,16 +851,14 @@ function openEditCellModal(td) {
   const parts0 = normalizeCell(getCell(termId, classId, day, lessonNo));
   const parts = parts0.length ? structuredClone(parts0) : [{ subject: "", teacherId: "", room: "", note: "" }];
 
-  const subjOpts = ["", ...dbData.settings.subjects]
+  const subjSorted = [...(dbData.settings.subjects || [])].sort(ruSort);
+  const subjOpts = ["", ...subjSorted]
     .map((s) => `<option value="${escapeAttr(s)}">${escapeHtml(s || "—")}</option>`)
     .join("");
-  const teachOpts = ["", ...dbData.settings.teachers.map((t) => t.id)]
-    .map((id) => {
-      const name = id ? teacherNameById(id) : "—";
-      return `<option value="${escapeAttr(id)}">${escapeHtml(name)}</option>`;
-    })
+  const teachersSorted = [...(dbData.settings.teachers || [])].sort((a, b) => ruSort(a?.name, b?.name));
+  const teachOpts = [{ id: "", name: "—" }, ...teachersSorted]
+    .map((t) => `<option value="${escapeAttr(t.id)}">${escapeHtml(t.name || t.id || "—")}</option>`)
     .join("");
-
   const rowHtml = (idx, cur) => `
     <div class="grp" data-idx="${idx}">
       <div class="grid2" style="gap:10px">
@@ -1024,16 +982,18 @@ function openEditCellModal(td) {
   rebuild();
 }
 
+
 function openSettingsModal() {
   if (!CAN_EDIT_SETTINGS.has(state.role)) {
     toast("Нет прав", "err");
     return;
   }
+
   const s = dbData.settings;
   const sbApi = window.sbApi;
   const hasSupabase = !!sbApi?.getSbConfig?.();
 
-  const bellRows = s.bellSchedule
+  const bellRows = (s.bellSchedule || [])
     .sort((a, b) => a.lesson - b.lesson)
     .map(
       (b, idx) => `
@@ -1058,13 +1018,29 @@ function openSettingsModal() {
     )
     .join("");
 
+  const terms = dbData.meta.terms || [];
+  const termRows = terms
+    .map(
+      (t, i) => `
+      <tr data-i="${i}">
+        <td><input class="termId" value="${escapeAttr(t.id || "")}" /></td>
+        <td><input class="termName" value="${escapeAttr(t.name || "")}" /></td>
+        <td><input class="termStart" value="${escapeAttr(t.start || "")}" placeholder="YYYY-MM-DD" /></td>
+        <td><input class="termEnd" value="${escapeAttr(t.end || "")}" placeholder="YYYY-MM-DD" /></td>
+        <td style="width:1%"><button class="btn danger sm" data-act="delTerm" data-i="${i}">Удалить</button></td>
+      </tr>
+    `
+    )
+    .join("");
+
   openModal(
     "Настройки (только администратор)",
     `
       <div class="tabs">
         <button class="tab active" data-tab="general">Общее</button>
+        <button class="tab" data-tab="terms">Полугодия</button>
         <button class="tab" data-tab="subjects">Предметы</button>
-        <button class="tab" data-tab="passwords">Пароли</button>
+        <button class="tab" data-tab="passwords">Пароль</button>
       </div>
 
       <div class="tabPanel" id="tab-general">
@@ -1086,13 +1062,35 @@ function openSettingsModal() {
             <tbody>${bellRows}</tbody>
           </table>
         </div>
-        <div class="muted" style="margin-top:10px">После изменения нажмите «Сохранить базу».</div>
+        <div class="muted" style="margin-top:10px">После изменения нажмите «Применить», затем «Сохранить базу».</div>
+      </div>
+
+      <div class="tabPanel" id="tab-terms" style="display:none">
+        <div class="grid2">
+          <div>
+            <div class="label">Полугодие по умолчанию</div>
+            <select id="activeTermSelect"></select>
+            <div class="muted" style="margin-top:6px">
+              Это полугодие будет открываться по умолчанию на главной странице.
+            </div>
+          </div>
+          <div></div>
+        </div>
+
+        <div class="label" style="margin-top:12px">Список полугодий</div>
+        <div class="tableWrap" style="max-height:340px">
+          <table class="mini" id="termTable">
+            <thead><tr><th style="width:18%">ID</th><th>Название</th><th style="width:18%">Начало</th><th style="width:18%">Конец</th><th></th></tr></thead>
+            <tbody>${termRows}</tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px"><button class="btn sm" id="addTerm">+ Добавить полугодие</button></div>
       </div>
 
       <div class="tabPanel" id="tab-subjects" style="display:none">
         <div class="muted" style="margin:6px 0 10px">Список предметов используется в редакторе расписания.</div>
         <div class="tableWrap" style="max-height:340px">
-          <table class="mini">
+          <table class="mini" id="subjTable">
             <thead><tr><th>Предмет</th><th></th></tr></thead>
             <tbody>${subjRows}</tbody>
           </table>
@@ -1102,8 +1100,7 @@ function openSettingsModal() {
 
       <div class="tabPanel" id="tab-passwords" style="display:none">
         <div class="muted" style="margin:6px 0 10px">
-          В этой версии пароли хранятся в Supabase Auth. Здесь можно сменить <b>свой</b> пароль.
-          Сброс паролей других пользователей (учителя/завуча) выполняется в Supabase Dashboard (или через Edge Function).
+          Если используется Supabase, здесь можно сменить <b>свой</b> пароль (вход по email).
         </div>
 
         ${hasSupabase ? `
@@ -1136,74 +1133,141 @@ function openSettingsModal() {
       b.classList.add("active");
       const tab = b.dataset.tab;
       $("#tab-general").style.display = tab === "general" ? "block" : "none";
+      $("#tab-terms").style.display = tab === "terms" ? "block" : "none";
       $("#tab-subjects").style.display = tab === "subjects" ? "block" : "none";
       $("#tab-passwords").style.display = tab === "passwords" ? "block" : "none";
     });
   });
 
-  // subjects add/delete
+  // init active term select (sorted A–Я)
+  const activeSel = $("#activeTermSelect");
+  activeSel.innerHTML = "";
+  const termsSorted = [...(dbData.meta.terms || [])].sort((a, b) => ruSort(a?.name, b?.name));
+  for (const t of termsSorted) {
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.name || t.id;
+    activeSel.appendChild(opt);
+  }
+  activeSel.value = dbData.meta.activeTermId || termsSorted[0]?.id || "";
+
+  // add/delete subjects (reopen to keep indices simple)
   $("#addSubj").addEventListener("click", () => {
     s.subjects ??= [];
     s.subjects.push("Новый предмет");
     closeModal();
     openSettingsModal();
   });
+
+  $("#addTerm").addEventListener("click", () => {
+    dbData.meta.terms ??= [];
+    const id = `term_${Date.now()}`;
+    dbData.meta.terms.push({ id, name: "Новое полугодие", start: "", end: "" });
+    dbData.meta.activeTermId = id;
+    closeModal();
+    openSettingsModal();
+  });
+
   $("#modalBody").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-act]");
     if (!btn) return;
+
     if (btn.dataset.act === "delSubj") {
       const i = parseInt(btn.dataset.i, 10);
       s.subjects.splice(i, 1);
       closeModal();
       openSettingsModal();
+      return;
+    }
+
+    if (btn.dataset.act === "delTerm") {
+      const i = parseInt(btn.dataset.i, 10);
+      const removed = (dbData.meta.terms || []).splice(i, 1)[0];
+      // если удалили активное — переключаем на первое доступное
+      if (removed?.id && dbData.meta.activeTermId === removed.id) {
+        dbData.meta.activeTermId = (dbData.meta.terms || [])[0]?.id || "";
+      }
+      closeModal();
+      openSettingsModal();
+      return;
     }
   });
 
   $("#mClose").addEventListener("click", closeModal);
-  $("#mApply").addEventListener("click", () => {
+
+  $("#mApply").addEventListener("click", async () => {
     // general
     dbData.meta.schoolName = $("#setSchool").value.trim() || "Школа";
     const lessons = Math.max(1, Math.min(12, parseInt($("#setLessons").value || "7", 10)));
     s.lessonsPerDay = lessons;
 
     // ensure bellSchedule has 0..lessons
-    const existing = new Map(s.bellSchedule.map((b) => [b.lesson, b]));
+    const existing = new Map((s.bellSchedule || []).map((b) => [b.lesson, b]));
     const next = [];
     for (let i = 0; i <= lessons; i++) {
       next.push(existing.get(i) || { lesson: i, start: "00:00", end: "00:00", label: i === 0 ? "Кл. час" : "" });
     }
     s.bellSchedule = next;
+
     $all("#tab-general table.mini input").forEach((inp) => {
       const idx = parseInt(inp.dataset.idx, 10);
       const k = inp.dataset.k;
       s.bellSchedule[idx][k] = inp.value.trim();
     });
 
-    // subjects
+    // subjects (unique + sorted A–Я)
     const newSubjects = $all("#tab-subjects .subjInp")
       .map((inp) => inp.value.trim())
       .filter(Boolean);
-    if (newSubjects.length) s.subjects = Array.from(new Set(newSubjects));
+    if (newSubjects.length) {
+      s.subjects = Array.from(new Set(newSubjects)).sort(ruSort);
+    }
 
-    // passwords (Supabase Auth: меняем только свой)
-$("#mApply").addEventListener("click", async () => {
-  const p1 = $("#newPass1").value;
-  const p2 = $("#newPass2").value;
+    // terms
+    const termTrs = $all("#termTable tbody tr");
+    const newTerms = [];
+    for (const tr of termTrs) {
+      const id = $(".termId", tr)?.value?.trim() || "";
+      const name = $(".termName", tr)?.value?.trim() || "";
+      const start = $(".termStart", tr)?.value?.trim() || "";
+      const end = $(".termEnd", tr)?.value?.trim() || "";
+      if (!id) continue;
+      newTerms.push({ id, name: name || id, start, end });
+    }
 
-  if (!p1 || p1 !== p2) {
-    toast("Пароли не совпадают");
-    return;
-  }
+    if (!newTerms.length) {
+      toast("Должно быть хотя бы одно полугодие", "err");
+      return;
+    }
 
-  const { error } = await sbApi.sbUpdateMyPassword(p1);
+    dbData.meta.terms = newTerms;
 
-  if (error) {
-    toast("Ошибка смены пароля: " + error.message);
-  } else {
-    toast("Пароль успешно изменён");
-  }
-});
+    const active = $("#activeTermSelect")?.value || "";
+    dbData.meta.activeTermId = newTerms.some((t) => t.id === active) ? active : newTerms[0].id;
 
+    // password (Supabase only): change my password if fields filled
+    if (hasSupabase) {
+      const p1 = ($("#pwNew")?.value || "").trim();
+      const p2 = ($("#pwNew2")?.value || "").trim();
+      if (p1 || p2) {
+        if (!p1 || p1 !== p2) {
+          toast("Пароли не совпадают", "err");
+          return;
+        }
+        try {
+          const { error } = await sbApi.sbUpdateMyPassword(p1);
+          if (error) {
+            toast("Ошибка смены пароля: " + (error.message || "ошибка"), "err");
+            return;
+          }
+          toast("Пароль успешно изменён", "ok");
+        } catch (e) {
+          console.error(e);
+          toast("Ошибка смены пароля", "err");
+          return;
+        }
+      }
+    }
 
     closeModal();
     hydrateControls();
@@ -1211,6 +1275,7 @@ $("#mApply").addEventListener("click", async () => {
     toast("Настройки применены", "ok");
   });
 }
+
 
 function openManageModal() {
   if (!CAN_EDIT_SCHEDULE.has(state.role)) {
