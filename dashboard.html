@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Школьное расписание</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body data-page="dashboard">
+  <div class="container">
+
+    <div class="topbar">
+      <div class="brand">
+        <div class="title" id="schoolTitle">Школьное расписание</div>
+        <div class="sub">Вход выполнен: <span id="roleBadge">—</span></div>
+      </div>
+
+      <div class="pills">
+        <button class="btn" id="btnOpenDb" title="Открыть db.json">Открыть базу</button>
+        <button class="btn" id="btnSave" title="Сохранить изменения">Сохранить базу</button>
+        <button class="btn" id="btnExport" title="Экспорт в Excel">Экспорт в Excel</button>
+        <button class="btn" id="btnManage" title="Классы и учителя">Классы/Учителя</button>
+        <button class="btn" id="btnSettings" title="Настройки (только администратор)">Настройки</button>
+        <button class="btn" id="btnLogout">Выход</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-h">
+          <h2>Фильтры</h2>
+          <span class="pill" id="editHint">—</span>
+        </div>
+        <div class="card-b">
+
+          <div class="field">
+            <label>Полугодие</label>
+            <select id="termSelect"></select>
+          </div>
+
+          <div class="field">
+            <label>Режим просмотра</label>
+            <select id="viewMode">
+              <option value="byClass">По классу</option>
+              <option value="byTeacher">По учителю</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Класс</label>
+            <select id="classSelect"></select>
+          </div>
+
+          <div class="field">
+            <label>Учитель</label>
+            <select id="teacherSelect"></select>
+          </div>
+
+          <div class="notice" id="dbHint">Откройте файл db.json кнопкой «Открыть базу». После этого можно просматривать/редактировать/экспортировать расписание.</div>
+
+        </div>
+      </div>
+
+      <div id="scheduleMount"></div>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- Универсальная модалка (используется для редактирования уроков, классов/учителей, настроек) -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="dialog">
+      <div class="dialog-h">
+        <div class="t" id="modalTitle">—</div>
+        <button class="btn sm" id="modalX" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="dialog-b" id="modalBody"></div>
+      <div class="dialog-f" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script src="assets/exceljs.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

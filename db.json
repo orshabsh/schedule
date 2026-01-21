@@ -1,0 +1,1206 @@
+{
+  "meta": {
+    "school": "Бабиничская средняя школа Оршанского района",
+    "activeTermId": "2025H2",
+    "terms": [
+      {
+        "id": "2025H1",
+        "name": "1 полугодие 2025/26",
+        "start": "2025-09-01",
+        "end": "2025-12-31"
+      },
+      {
+        "id": "2025H2",
+        "name": "2 полугодие 2025/26",
+        "start": "2026-01-01",
+        "end": "2026-05-31"
+      }
+    ],
+    "schoolName": "Бабиничская средняя школа Оршанского района"
+  },
+  "auth": {
+    "admin": {
+      "password": "1779"
+    },
+    "deputy": {
+      "password": "1346"
+    },
+    "teacher": {
+      "password": "1234"
+    }
+  },
+  "settings": {
+    "days": [
+      "Понедельник",
+      "Вторник",
+      "Среда",
+      "Четверг",
+      "Пятница"
+    ],
+    "lessonsPerDay": 8,
+    "bellSchedule": [
+      {
+        "lesson": 0,
+        "start": "08:00",
+        "end": "08:45",
+        "label": ""
+      },
+      {
+        "lesson": 1,
+        "start": "09:00",
+        "end": "09:45",
+        "label": ""
+      },
+      {
+        "lesson": 2,
+        "start": "10:00",
+        "end": "10:45",
+        "label": ""
+      },
+      {
+        "lesson": 3,
+        "start": "11:00",
+        "end": "11:45",
+        "label": ""
+      },
+      {
+        "lesson": 4,
+        "start": "12:00",
+        "end": "12:45",
+        "label": ""
+      },
+      {
+        "lesson": 5,
+        "start": "13:00",
+        "end": "13:45",
+        "label": ""
+      },
+      {
+        "lesson": 6,
+        "start": "13:55",
+        "end": "14:40",
+        "label": ""
+      },
+      {
+        "lesson": 7,
+        "start": "14:50",
+        "end": "15:35",
+        "label": ""
+      },
+      {
+        "lesson": 8,
+        "start": "15:45",
+        "end": "16:30",
+        "label": ""
+      }
+    ],
+    "classes": [
+      {
+        "id": "C1768776046805",
+        "name": "11",
+        "room": "7",
+        "classTeacherId": "GorovetsKN"
+      },
+      {
+        "id": "C1768778312559",
+        "name": "10",
+        "room": "3(0)",
+        "classTeacherId": "KlimovaKN"
+      },
+      {
+        "id": "C1768778326067",
+        "name": "9А",
+        "room": "2",
+        "classTeacherId": "ZagorskayaAV"
+      },
+      {
+        "id": "C1768778326570",
+        "name": "9Б",
+        "room": "1",
+        "classTeacherId": "BaslerovaTV"
+      },
+      {
+        "id": "C1768778327057",
+        "name": "8А",
+        "room": "10",
+        "classTeacherId": "RyabushkoTA"
+      },
+      {
+        "id": "C1768778327583",
+        "name": "8Б",
+        "room": "8",
+        "classTeacherId": "VadilnikovaOS"
+      },
+      {
+        "id": "C1768778328183",
+        "name": "7А",
+        "room": "6",
+        "classTeacherId": "BushkevichON"
+      },
+      {
+        "id": "C1768778328520",
+        "name": "7Б",
+        "room": "2(0)",
+        "classTeacherId": "SolovevaNS"
+      },
+      {
+        "id": "C1768778328707",
+        "name": "6А",
+        "room": "3",
+        "classTeacherId": "OrlovaIN"
+      },
+      {
+        "id": "C1768778328882",
+        "name": "6Б",
+        "room": "5",
+        "classTeacherId": "KachurinaAA"
+      },
+      {
+        "id": "C1768778329210",
+        "name": "5А",
+        "room": "4(0)",
+        "classTeacherId": "VasilevskayaTS"
+      },
+      {
+        "id": "C1768778329360",
+        "name": "5Б",
+        "room": "1(0)",
+        "classTeacherId": "StolybkoSE"
+      }
+    ],
+    "teachers": [
+      {
+        "id": "BaslerovaTV",
+        "name": "Баслерова Т.В."
+      },
+      {
+        "id": "BobrovnikIE",
+        "name": "Бобровник И.Э."
+      },
+      {
+        "id": "BushkevichON",
+        "name": "Бушкевич О.Н."
+      },
+      {
+        "id": "VavinskayaGN",
+        "name": "Вавинская Г.Н."
+      },
+      {
+        "id": "VadilnikovaOS",
+        "name": "Вадильникова О.С."
+      },
+      {
+        "id": "VasilevskayaTS",
+        "name": "Василевская Т.С."
+      },
+      {
+        "id": "GoncharovaIA",
+        "name": "Гончарова И.А."
+      },
+      {
+        "id": "GorovetsKN",
+        "name": "Горовец К.Н."
+      },
+      {
+        "id": "EvdokimovaMS",
+        "name": "Евдокимова М.С."
+      },
+      {
+        "id": "ZagorskayaAV",
+        "name": "Загорская А.В."
+      },
+      {
+        "id": "ZakharkoIN",
+        "name": "Захарко И.Н."
+      },
+      {
+        "id": "IberzovaLV",
+        "name": "Иберзова Л.В."
+      },
+      {
+        "id": "IvanovaEV",
+        "name": "Иванова Е.В."
+      },
+      {
+        "id": "KavetskayaGS",
+        "name": "Кавецкая Г.С."
+      },
+      {
+        "id": "KarmazaTA",
+        "name": "Кармаза Т.А."
+      },
+      {
+        "id": "KachurinaAA",
+        "name": "Качурина А.А."
+      },
+      {
+        "id": "KlimenkovaNA",
+        "name": "Клименкова Н.А."
+      },
+      {
+        "id": "KlimovaKN",
+        "name": "Климова К.Н."
+      },
+      {
+        "id": "KozhevnikovaIP",
+        "name": "Кожевникова И.П."
+      },
+      {
+        "id": "KozlovaTV",
+        "name": "Козлова Т.В."
+      },
+      {
+        "id": "KolesnikovaNI",
+        "name": "Колесникова Н.И."
+      },
+      {
+        "id": "KupavaVN",
+        "name": "Купава В.Н."
+      },
+      {
+        "id": "KuslevichMYa",
+        "name": "Куслевич М.Я."
+      },
+      {
+        "id": "LishankovaLV",
+        "name": "Лишанкова Л.В."
+      },
+      {
+        "id": "MaksimovaAA",
+        "name": "Максимова А.А."
+      },
+      {
+        "id": "MashedoMM",
+        "name": "Машедо М.М."
+      },
+      {
+        "id": "OlymenkoSV",
+        "name": "Олыменко С.В."
+      },
+      {
+        "id": "OrlovEN",
+        "name": "Орлов Е.Н."
+      },
+      {
+        "id": "OrlovaIN",
+        "name": "Орлова И.Н."
+      },
+      {
+        "id": "RozhanovaSG",
+        "name": "Рожанова С.Г."
+      },
+      {
+        "id": "RomanovskayaNN",
+        "name": "Романовская Н.Н."
+      },
+      {
+        "id": "RomanovskayaSV",
+        "name": "Романовская С.В."
+      },
+      {
+        "id": "RyabushkoTA",
+        "name": "Рябушко Т.А."
+      },
+      {
+        "id": "SemenkovaAF",
+        "name": "Семенкова А.Ф."
+      },
+      {
+        "id": "SolovevaNS",
+        "name": "Соловьева Н.С."
+      },
+      {
+        "id": "StolybkoSE",
+        "name": "Столыбко С.Е."
+      },
+      {
+        "id": "KharitonovaIN",
+        "name": "Харитонова И.Н."
+      },
+      {
+        "id": "ShelkovichVV",
+        "name": "Шелкович В.В."
+      },
+      {
+        "id": "ShinkarevaRS",
+        "name": "Шинкарева Р.С."
+      }
+    ],
+    "subjects": [
+      "Бел. яз.",
+      "Бел. лит.",
+      "Рус. яз.",
+      "Рус. лит.",
+      "Ин. яз.",
+      "Матем.",
+      "Информ.",
+      "Чел. и Мир",
+      "Всемир. ист.",
+      "Ист. Бел.",
+      "Ист. Бел. в кон. всем. ист.",
+      "Обществов.",
+      "ВОв",
+      "География",
+      "Биология",
+      "Физика",
+      "Астрономия",
+      "Химия",
+      "Труд. обуч.",
+      "Искусство",
+      "ФКиЗ",
+      "ДП/МП",
+      "Черчение",
+      "ОБЖ",
+      "ЧЗС",
+      "Кл. час",
+      "Информ. час",
+      "Факультатив",
+      "Платное занятие",
+      "Другое"
+    ]
+  },
+  "timetable": {
+    "2025H2": {
+      "C1768776046805": {
+        "Понедельник": {
+          "1": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "География",
+            "teacherId": "VasilevskayaTS",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Бел. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Вторник": {
+          "1": {
+            "subject": "Ист. Бел.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Рус. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Информ.",
+            "teacherId": "KupavaVN",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Среда": {
+          "1": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Биология",
+            "teacherId": "SolovevaNS",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "ДП/МП",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "Астрономия",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Четверг": {
+          "1": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Биология",
+            "teacherId": "SolovevaNS",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Рус. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "Труд. обуч.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Пятница": {
+          "1": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Ист. Бел.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Обществов.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        }
+      },
+      "C1768778312559": {
+        "Понедельник": {
+          "0": {
+            "subject": "Труд. обуч.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "1": {
+            "subject": "Рус. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "География",
+            "teacherId": "VasilevskayaTS",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Вторник": {
+          "1": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Информ.",
+            "teacherId": "KupavaVN",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Ист. Бел.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Среда": {
+          "0": {
+            "subject": "Труд. обуч.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "1": {
+            "subject": "ДП/МП",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Биология",
+            "teacherId": "SolovevaNS",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Ист. Бел.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Бел. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "Биология",
+            "teacherId": "SolovevaNS",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Четверг": {
+          "1": {
+            "subject": "Бел. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Биология",
+            "teacherId": "SolovevaNS",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Черчение",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "Труд. обуч.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Пятница": {
+          "1": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Обществов.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "Биология",
+            "teacherId": "SolovevaNS",
+            "room": "",
+            "note": ""
+          }
+        }
+      },
+      "C1768778326067": {
+        "Понедельник": {
+          "1": {
+            "subject": "Информ.",
+            "teacherId": "KupavaVN",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Всемир. ист.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "География",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Вторник": {
+          "1": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Бел. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Обществов.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Среда": {
+          "0": {
+            "subject": "Искусство",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "1": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "ВОв",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Биология",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Четверг": {
+          "1": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Труд. обуч.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Рус. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Ист. Бел.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Пятница": {
+          "1": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "География",
+            "teacherId": "VasilevskayaTS",
+            "room": "",
+            "note": ""
+          }
+        }
+      },
+      "C1768778326570": {
+        "Понедельник": {
+          "1": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Всемир. ист.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "География",
+            "teacherId": "VasilevskayaTS",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Информ.",
+            "teacherId": "KupavaVN",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Вторник": {
+          "1": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Обществов.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Химия",
+            "teacherId": "ZakharkoIN",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Бел. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Среда": {
+          "1": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "ВОв",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Биология",
+            "teacherId": "SolovevaNS",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Искусство",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Четверг": {
+          "1": {
+            "subject": "Труд. обуч.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "Ист. Бел.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Бел. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Рус. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        },
+        "Пятница": {
+          "1": {
+            "subject": "Рус. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "2": {
+            "subject": "Ин. яз.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "3": {
+            "subject": "География",
+            "teacherId": "VasilevskayaTS",
+            "room": "",
+            "note": ""
+          },
+          "4": {
+            "subject": "Рус. лит.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "5": {
+            "subject": "Физика",
+            "teacherId": "RozhanovaSG",
+            "room": "",
+            "note": ""
+          },
+          "6": {
+            "subject": "Матем.",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          },
+          "7": {
+            "subject": "ФКиЗ",
+            "teacherId": "",
+            "room": "",
+            "note": ""
+          }
+        }
+      }
+    }
+  }
+}

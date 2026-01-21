@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Школьное расписание — вход</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body data-page="login">
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="brand-title">Система «Школьное расписание»</div>
+          <div class="brand-sub">Разработчик: Костянко Д.А. · Витебск, 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      <div class="card">
+        <h2 style="margin:10px 10px 10px 10px">Вход</h2>
+
+        <div class="form">
+          <label class="label">Роль</label>
+          <select id="roleSelect" class="input">
+            <option value="user">Пользователь (без пароля)</option>
+            <option value="teacher">Учитель</option>
+            <option value="deputy">Завуч</option>
+            <option value="admin">Администратор</option>
+          </select>
+
+          <label class="label">Пароль</label>
+          <div id="passwordWrap">
+		  <input id="passwordInput" class="input" type="password" placeholder="Только для ролей с паролем" autocomplete="current-password"/>
+		  </div>
+
+          <div class="row" style="margin-top:12px">
+            <button id="btnLogin" class="btn primary">Продолжить</button>
+            <button id="btnReset" class="btn">Сбросить сессию</button>
+          </div>
+
+          <div id="msg" class="toast" style="display:none;margin-top:12px"></div>
+
+          <div class="divider"></div>
+          <!--<details>
+            <summary class="muted">Тестовые пароли</summary>
+            <div class="muted" style="margin-top:10px">
+              Администратор: <code>admin</code><br/>
+              Завуч: <code>deputy</code><br/>
+              Учитель: <code>teacher</code>
+            </div>
+          </details>-->
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:10px 10px 10px 10px">Как это работает</h2>
+        <ol class="muted" style="line-height:1.65;margin:30px 30px 30px 30px">
+          <li>Откройте <b>login.html</b>.</li>
+          <li>На dashboard нажмите <b>Открыть базу</b> и выберите файл <b>db.json</b>.</li>
+          <li>Сохранение идёт обратно в выбранный JSON (через File System Access API в Edge/Chrome).</li>
+        </ol>
+        <p class="muted" style="margin:10px 10px 10px 10px">
+          Если браузер не поддерживает запись в файл (или вы открыли страницу не через HTTPS/localhost), можно скачать JSON вручную кнопкой «Экспорт JSON». 
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
