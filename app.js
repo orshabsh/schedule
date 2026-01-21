@@ -18,18 +18,42 @@ const ROLE_LABEL = {
 const CAN_EDIT_SCHEDULE = new Set(["admin", "deputy"]);
 const CAN_EDIT_SETTINGS = new Set(["admin"]);
 
-// Демо-пароли (для локального развёртывания).
-// Если вы хотите вынести их в отдельный файл — можно.
-const PASSWORDS = {
+// Пароли (локально).
+// По умолчанию — демо-значения. Фактические пароли читаются из localStorage.
+// Если открыта база db.json, пароли синхронизируются в dbData.meta.passwords и сохраняются вместе с базой.
+const PASSWORDS_DEFAULT = {
   admin: "1779",
   deputy: "1346",
   teacher: "1234",
 };
 
+function getPasswords() {
+  try {
+    const raw = localStorage.getItem("sched_passwords");
+    const obj = raw ? JSON.parse(raw) : null;
+    return {
+      ...PASSWORDS_DEFAULT,
+      ...(obj && typeof obj === "object" ? obj : {}),
+    };
+  } catch {
+    return { ...PASSWORDS_DEFAULT };
+  }
+}
+
+function setPasswords(pwObj) {
+  const safe = {
+    admin: String(pwObj?.admin ?? PASSWORDS_DEFAULT.admin),
+    deputy: String(pwObj?.deputy ?? PASSWORDS_DEFAULT.deputy),
+    teacher: String(pwObj?.teacher ?? PASSWORDS_DEFAULT.teacher),
+  };
+  localStorage.setItem("sched_passwords", JSON.stringify(safe));
+}
+
 const DB_DEFAULT = {
   meta: {
     schoolName: "Школа",
     activeTermId: "2025_H1",
+    passwords: { ...PASSWORDS_DEFAULT },
     terms: [
       { id: "2025_H1", name: "1 полугодие 2025/26", start: "2025-09-01", end: "2025-12-31" },
       { id: "2025_H2", name: "2 полугодие 2025/26", start: "2026-01-09", end: "2026-05-31" },
@@ -178,6 +202,19 @@ async function loadDbFromHandle() {
   } catch {
     dbData = structuredClone(DB_DEFAULT);
   }
+
+  // миграция/синхронизация паролей
+  dbData.meta ??= {};
+  dbData.meta.passwords ??= null;
+  const pwLocal = getPasswords();
+  const pwDb = dbData.meta.passwords && typeof dbData.meta.passwords === "object" ? dbData.meta.passwords : null;
+  if (pwDb) {
+    // база — источник истины
+    setPasswords({ ...pwLocal, ...pwDb });
+  } else {
+    // в базе нет — записываем из localStorage/дефолтов
+    dbData.meta.passwords = pwLocal;
+  }
 }
 
 async function loadDbAuto() {
@@ -230,6 +267,31 @@ function getCell(termId, classId, day, lessonNo) {
   const t = dbData.timetable?.[termId]?.[classId]?.[day]?.[String(lessonNo)];
   return t || null;
 }
+
+// Ячейка может быть:
+// 1) объектом {subject, teacherId, room, note} (старый формат)
+// 2) массивом таких объектов (подгруппы в одном уроке)
+function normalizeCell(cell) {
+  if (!cell) return [];
+  if (Array.isArray(cell)) return cell.filter(Boolean);
+  if (Array.isArray(cell.items)) return cell.items.filter(Boolean);
+  if (typeof cell === "object") return [cell];
+  return [];
+}
+
+function denormalizeCell(items) {
+  const clean = (items || [])
+    .map((x) => ({
+      subject: (x?.subject || "").trim(),
+      teacherId: (x?.teacherId || "").trim(),
+      room: (x?.room || "").trim(),
+      note: (x?.note || "").trim(),
+    }))
+    .filter((x) => x.subject);
+  if (!clean.length) return null;
+  if (clean.length === 1) return clean[0];
+  return clean;
+}
 function setCell(termId, classId, day, lessonNo, valOrNull) {
   const dayObj = ensurePath(termId, classId, day);
   const key = String(lessonNo);
@@ -241,6 +303,12 @@ function setCell(termId, classId, day, lessonNo, valOrNull) {
 }
 function teacherNameById(id) {
   return dbData.settings.teachers.find((t) => t.id === id)?.name || "";
+}
+
+function fmtSubjectNote(x) {
+  const s = (x?.subject || "").trim();
+  const n = (x?.note || "").trim();
+  return n ? `${s} (${n})` : s;
 }
 
 // ------------------------------
@@ -269,8 +337,9 @@ function initLogin() {
       location.href = "dashboard.html";
       return;
     }
+    const pw = getPasswords();
     const p = passInp.value || "";
-    if (p !== PASSWORDS[role]) {
+    if (p !== (pw[role] || "")) {
       toast("Неверный пароль", "err");
       return;
     }
@@ -381,22 +450,6 @@ function initDashboard() {
 
   // кнопка ✕ в заголовке модалки (если есть)
   $("#modalX")?.addEventListener("click", closeModal);
-  
-  autoLoadDb();
-}
-
-async function autoLoadDb() {
-  try {
-    const res = await fetch("db.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("db.json not found");
-
-    const data = await res.json();
-    window.DB = data;
-    renderAll();
-    toast("База данных загружена автоматически");
-  } catch (e) {
-    toast("db.json не найден — используйте «Открыть базу»", true);
-  }
 }
 
 
@@ -549,7 +602,9 @@ function renderClassTable(termId, classId, days, lessonNos) {
     for (const day of days) {
       const td = document.createElement("td");
       const cell = getCell(termId, classId, day, lessonNo);
-      td.innerHTML = renderCellText(cell);
+      td.innerHTML = renderClassCellHtml(cell);
+      const tip = buildClassTooltip(cell);
+      if (tip) td.title = tip;
       td.dataset.term = termId;
       td.dataset.class = classId;
       td.dataset.day = day;
@@ -585,7 +640,7 @@ function renderTeacherTable(termId, teacherId, days, lessonNos) {
     </div>
   `;
 
-  // Собираем матрицу: день x урок -> список занятий
+  // Собираем матрицу: день x урок -> список занятий (учитываем подгруппы)
   const items = {};
   for (const day of days) items[day] = {};
 
@@ -593,11 +648,16 @@ function renderTeacherTable(termId, teacherId, days, lessonNos) {
   for (const c of classes) {
     for (const day of days) {
       for (const lessonNo of lessonNos) {
-        const cell = getCell(termId, c.id, day, lessonNo);
-        if (cell?.teacherId === teacherId) {
-          const line = `${c.name}: ${cell.subject}${cell.room ? `, каб. ${cell.room}` : ""}`;
+        const raw = getCell(termId, c.id, day, lessonNo);
+        const parts = normalizeCell(raw);
+        for (const p of parts) {
+          if ((p?.teacherId || "") !== teacherId) continue;
           items[day][lessonNo] ??= [];
-          items[day][lessonNo].push(line);
+          items[day][lessonNo].push({
+            subjectNote: fmtSubjectNote(p),
+            className: c.name || c.id,
+            room: (p?.room || "").trim(),
+          });
         }
       }
     }
@@ -639,7 +699,16 @@ function renderTeacherTable(termId, teacherId, days, lessonNos) {
     for (const day of days) {
       const td = document.createElement("td");
       const list = items[day][lessonNo] || [];
-      td.innerHTML = list.length ? list.map(escapeHtml).join("<br>") : "";
+      td.innerHTML = list.length
+        ? list
+            .map(
+              (x) =>
+                `<div class="tcell-line"><span class="tcell-subj">${escapeHtml(x.subjectNote)}</span> <span class="tcell-class">${escapeHtml(x.className)}</span></div>`
+            )
+            .join("")
+        : "";
+      const tip = buildTeacherTooltip(list);
+      if (tip) td.title = tip;
       td.classList.toggle("editable", isEditor);
       tr.appendChild(td);
     }
@@ -653,18 +722,36 @@ function renderTeacherTable(termId, teacherId, days, lessonNos) {
   return card;
 }
 
-function renderCellText(cell) {
-  if (!cell) return "";
-  const subject = escapeHtml(cell.subject || "");
-  const t = cell.teacherId ? escapeHtml(teacherNameById(cell.teacherId)) : "";
-  const room = cell.room ? escapeHtml(String(cell.room)) : "";
-  const note = cell.note ? escapeHtml(String(cell.note)) : "";
-  return `
-    <div class="cell">
-      <div class="cell-main">${subject || "—"}</div>
-      <div class="cell-sub">${[t, room ? `каб. ${room}` : "", note].filter(Boolean).join(" · ")}</div>
-    </div>
-  `;
+function renderClassCellHtml(raw) {
+  const parts = normalizeCell(raw);
+  if (!parts.length) return "";
+  const main = parts.map((x) => fmtSubjectNote(x)).join(" / ");
+  return `<div class="cell"><div class="subject">${escapeHtml(main)}</div></div>`;
+}
+
+function buildClassTooltip(raw) {
+  const parts = normalizeCell(raw);
+  if (!parts.length) return "";
+  return parts
+    .map((x) => {
+      const sn = fmtSubjectNote(x);
+      const tn = (x?.teacherId || "") ? teacherNameById(x.teacherId) : "";
+      const rm = (x?.room || "").trim();
+      const tail = [tn, rm ? `каб. ${rm}` : ""].filter(Boolean).join(" · ");
+      return tail ? `${sn} — ${tail}` : sn;
+    })
+    .join("\n");
+}
+
+function buildTeacherTooltip(list) {
+  if (!list?.length) return "";
+  return list
+    .map((x) => {
+      const lines = [x.subjectNote, x.className];
+      if (x.room) lines.push(`каб. ${x.room}`);
+      return lines.join("\n");
+    })
+    .join("\n\n");
 }
 
 // ------------------------------
@@ -686,40 +773,58 @@ function openEditCellModal(td) {
   const classId = td.dataset.class;
   const day = td.dataset.day;
   const lessonNo = parseInt(td.dataset.lesson, 10);
-  const cur = getCell(termId, classId, day, lessonNo) || { subject: "", teacherId: "", room: "", note: "" };
+  const parts0 = normalizeCell(getCell(termId, classId, day, lessonNo));
+  const parts = parts0.length ? structuredClone(parts0) : [{ subject: "", teacherId: "", room: "", note: "" }];
 
   const subjOpts = ["", ...dbData.settings.subjects]
-    .map((s) => `<option value="${escapeAttr(s)}" ${s === cur.subject ? "selected" : ""}>${escapeHtml(s || "—")}</option>`)
+    .map((s) => `<option value="${escapeAttr(s)}">${escapeHtml(s || "—")}</option>`)
     .join("");
   const teachOpts = ["", ...dbData.settings.teachers.map((t) => t.id)]
     .map((id) => {
       const name = id ? teacherNameById(id) : "—";
-      return `<option value="${escapeAttr(id)}" ${id === cur.teacherId ? "selected" : ""}>${escapeHtml(name)}</option>`;
+      return `<option value="${escapeAttr(id)}">${escapeHtml(name)}</option>`;
     })
     .join("");
+
+  const rowHtml = (idx, cur) => `
+    <div class="grp" data-idx="${idx}">
+      <div class="grid2" style="gap:10px">
+        <div>
+          <div class="label">Предмет</div>
+          <select class="gSubject">${subjOpts}</select>
+        </div>
+        <div>
+          <div class="label">Учитель</div>
+          <select class="gTeacher">${teachOpts}</select>
+        </div>
+        <div>
+          <div class="label">Кабинет</div>
+          <input class="gRoom" type="text" placeholder="например 12"/>
+        </div>
+        <div>
+          <div class="label">Примечание (в скобках)</div>
+          <input class="gNote" type="text" placeholder="например: подгруппа"/>
+        </div>
+      </div>
+      <div style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end">
+        <button class="btn ghost sm" data-act="delGrp">Удалить подгруппу</button>
+      </div>
+      <div class="hr"></div>
+    </div>
+  `;
 
   openModal(
     `Редактирование: ${escapeHtml(day)} · урок ${lessonNo}`,
     `
-      <div class="grid2">
-        <div>
-          <div class="label">Предмет</div>
-          <select id="mSubject">${subjOpts}</select>
-        </div>
-        <div>
-          <div class="label">Учитель</div>
-          <select id="mTeacher">${teachOpts}</select>
-        </div>
-        <div>
-          <div class="label">Кабинет</div>
-          <input id="mRoom" type="text" value="${escapeAttr(cur.room || "")}" placeholder="например 12"/>
-        </div>
-        <div>
-          <div class="label">Примечание (опционально)</div>
-          <input id="mNote" type="text" value="${escapeAttr(cur.note || "")}" placeholder="например: подгруппа"/>
-        </div>
+      <div class="muted" style="margin-bottom:10px">
+        Можно добавить 2–4 подгруппы в один урок. В расписании класса будет показано: <b>Предмет (примечание) / …</b>.
+        Наведите на ячейку — увидите подробности.
       </div>
-      <div class="muted" style="margin-top:10px">Подсказка: пустой предмет = очистить ячейку.</div>
+      <div id="mGroups">${parts.map((p, i) => rowHtml(i, p)).join("")}</div>
+      <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:8px">
+        <button class="btn sm" id="addGrp">+ Подгруппа</button>
+        <div class="muted">Пустой предмет в подгруппе игнорируется.</div>
+      </div>
     `,
     `
       <button class="btn ghost" id="mCancel">Отмена</button>
@@ -728,35 +833,80 @@ function openEditCellModal(td) {
     `
   );
 
+  function syncRowValues() {
+    $all("#mGroups .grp").forEach((grp, idx) => {
+      const cur = parts[idx] || (parts[idx] = { subject: "", teacherId: "", room: "", note: "" });
+      const subj = $(".gSubject", grp);
+      const tch = $(".gTeacher", grp);
+      const rm = $(".gRoom", grp);
+      const nt = $(".gNote", grp);
+      subj.value = cur.subject || "";
+      tch.value = cur.teacherId || "";
+      rm.value = cur.room || "";
+      nt.value = cur.note || "";
+    });
+  }
+
+  function readRows() {
+    const out = [];
+    $all("#mGroups .grp").forEach((grp) => {
+      out.push({
+        subject: $(".gSubject", grp).value,
+        teacherId: $(".gTeacher", grp).value,
+        room: $(".gRoom", grp).value.trim(),
+        note: $(".gNote", grp).value.trim(),
+      });
+    });
+    return out;
+  }
+
+  function rebuild() {
+    const mount = $("#mGroups");
+    mount.innerHTML = parts.map((p, i) => rowHtml(i, p)).join("");
+    syncRowValues();
+    updateDeleteButtons();
+  }
+
+  function updateDeleteButtons() {
+    const canDel = $all("#mGroups .grp").length > 1;
+    $all("#mGroups button[data-act='delGrp']").forEach((b) => (b.disabled = !canDel));
+    $("#addGrp").disabled = $all("#mGroups .grp").length >= 4;
+  }
+
+  $("#mGroups").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    if (btn.dataset.act === "delGrp") {
+      const grp = btn.closest(".grp");
+      const idx = parseInt(grp.dataset.idx, 10);
+      parts.splice(idx, 1);
+      rebuild();
+    }
+  });
+
+  $("#addGrp").addEventListener("click", () => {
+    if (parts.length >= 4) return;
+    parts.push({ subject: "", teacherId: "", room: "", note: "" });
+    rebuild();
+  });
+
   $("#mCancel").addEventListener("click", closeModal);
   $("#mClear").addEventListener("click", () => {
     setCell(termId, classId, day, lessonNo, null);
     td.innerHTML = "";
+    td.title = "";
     closeModal();
   });
   $("#mApply").addEventListener("click", () => {
-    const subject = $("#mSubject").value;
-    const teacherId = $("#mTeacher").value;
-    const room = $("#mRoom").value.trim();
-    const note = $("#mNote").value.trim();
-
-    if (!subject) {
-      setCell(termId, classId, day, lessonNo, null);
-      td.innerHTML = "";
-      closeModal();
-      return;
-    }
-
-    const val = {
-      subject,
-      teacherId: teacherId || "",
-      room: room || "",
-      note: note || "",
-    };
+    const val = denormalizeCell(readRows());
     setCell(termId, classId, day, lessonNo, val);
-    td.innerHTML = renderCellText(val);
+    td.innerHTML = renderClassCellHtml(val);
+    td.title = buildClassTooltip(val);
     closeModal();
   });
+
+  // init
+  rebuild();
 }
 
 function openSettingsModal() {
@@ -765,7 +915,9 @@ function openSettingsModal() {
     return;
   }
   const s = dbData.settings;
-  const rows = s.bellSchedule
+  const pw = getPasswords();
+
+  const bellRows = s.bellSchedule
     .sort((a, b) => a.lesson - b.lesson)
     .map(
       (b, idx) => `
@@ -779,27 +931,76 @@ function openSettingsModal() {
     )
     .join("");
 
+  const subjRows = (s.subjects || [])
+    .map(
+      (name, i) => `
+      <tr>
+        <td><input class="subjInp" data-i="${i}" value="${escapeAttr(String(name))}"/></td>
+        <td style="width:1%"><button class="btn danger sm" data-act="delSubj" data-i="${i}">Удалить</button></td>
+      </tr>
+    `
+    )
+    .join("");
+
   openModal(
     "Настройки (только администратор)",
     `
-      <div class="grid2">
-        <div>
-          <div class="label">Название школы</div>
-          <input id="setSchool" value="${escapeAttr(dbData.meta.schoolName || "")}"/>
+      <div class="tabs">
+        <button class="tab active" data-tab="general">Общее</button>
+        <button class="tab" data-tab="subjects">Предметы</button>
+        <button class="tab" data-tab="passwords">Пароли</button>
+      </div>
+
+      <div class="tabPanel" id="tab-general">
+        <div class="grid2">
+          <div>
+            <div class="label">Название школы</div>
+            <input id="setSchool" value="${escapeAttr(dbData.meta.schoolName || "")}"/>
+          </div>
+          <div>
+            <div class="label">Кол-во уроков в день (без нулевого)</div>
+            <input id="setLessons" type="number" min="1" max="12" value="${escapeAttr(String(s.lessonsPerDay || 7))}"/>
+          </div>
         </div>
-        <div>
-          <div class="label">Кол-во уроков в день (без нулевого)</div>
-          <input id="setLessons" type="number" min="1" max="12" value="${escapeAttr(String(s.lessonsPerDay || 7))}"/>
+
+        <div style="margin-top:12px" class="label">Время звонков</div>
+        <div class="tableWrap" style="max-height:340px">
+          <table class="mini">
+            <thead><tr><th>Урок</th><th>Начало</th><th>Конец</th><th>Метка</th></tr></thead>
+            <tbody>${bellRows}</tbody>
+          </table>
+        </div>
+        <div class="muted" style="margin-top:10px">После изменения нажмите «Сохранить базу».</div>
+      </div>
+
+      <div class="tabPanel" id="tab-subjects" style="display:none">
+        <div class="muted" style="margin:6px 0 10px">Список предметов используется в редакторе расписания.</div>
+        <div class="tableWrap" style="max-height:340px">
+          <table class="mini">
+            <thead><tr><th>Предмет</th><th></th></tr></thead>
+            <tbody>${subjRows}</tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px"><button class="btn sm" id="addSubj">+ Добавить предмет</button></div>
+      </div>
+
+      <div class="tabPanel" id="tab-passwords" style="display:none">
+        <div class="muted" style="margin:6px 0 10px">Изменения паролей вступают в силу сразу (и сохраняются в db.json после «Сохранить базу»).</div>
+        <div class="grid2">
+          <div>
+            <div class="label">Пароль администратора</div>
+            <input id="pwAdmin" type="password" value="${escapeAttr(pw.admin)}"/>
+          </div>
+          <div>
+            <div class="label">Пароль завуча</div>
+            <input id="pwDeputy" type="password" value="${escapeAttr(pw.deputy)}"/>
+          </div>
+          <div>
+            <div class="label">Пароль учителя</div>
+            <input id="pwTeacher" type="password" value="${escapeAttr(pw.teacher)}"/>
+          </div>
         </div>
       </div>
-      <div style="margin-top:12px" class="label">Время звонков</div>
-      <div class="tableWrap" style="max-height:340px">
-        <table class="mini">
-          <thead><tr><th>Урок</th><th>Начало</th><th>Конец</th><th>Метка</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-      <div class="muted" style="margin-top:10px">После изменения нажмите «Сохранить».</div>
     `,
     `
       <button class="btn ghost" id="mClose">Закрыть</button>
@@ -807,8 +1008,39 @@ function openSettingsModal() {
     `
   );
 
+  // tabs
+  $all(".tab").forEach((b) => {
+    b.addEventListener("click", () => {
+      $all(".tab").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      const tab = b.dataset.tab;
+      $("#tab-general").style.display = tab === "general" ? "block" : "none";
+      $("#tab-subjects").style.display = tab === "subjects" ? "block" : "none";
+      $("#tab-passwords").style.display = tab === "passwords" ? "block" : "none";
+    });
+  });
+
+  // subjects add/delete
+  $("#addSubj").addEventListener("click", () => {
+    s.subjects ??= [];
+    s.subjects.push("Новый предмет");
+    closeModal();
+    openSettingsModal();
+  });
+  $("#modalBody").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    if (btn.dataset.act === "delSubj") {
+      const i = parseInt(btn.dataset.i, 10);
+      s.subjects.splice(i, 1);
+      closeModal();
+      openSettingsModal();
+    }
+  });
+
   $("#mClose").addEventListener("click", closeModal);
   $("#mApply").addEventListener("click", () => {
+    // general
     dbData.meta.schoolName = $("#setSchool").value.trim() || "Школа";
     const lessons = Math.max(1, Math.min(12, parseInt($("#setLessons").value || "7", 10)));
     s.lessonsPerDay = lessons;
@@ -820,12 +1052,26 @@ function openSettingsModal() {
       next.push(existing.get(i) || { lesson: i, start: "00:00", end: "00:00", label: i === 0 ? "Кл. час" : "" });
     }
     s.bellSchedule = next;
-
-    $all("table.mini input").forEach((inp) => {
+    $all("#tab-general table.mini input").forEach((inp) => {
       const idx = parseInt(inp.dataset.idx, 10);
       const k = inp.dataset.k;
       s.bellSchedule[idx][k] = inp.value.trim();
     });
+
+    // subjects
+    const newSubjects = $all("#tab-subjects .subjInp")
+      .map((inp) => inp.value.trim())
+      .filter(Boolean);
+    if (newSubjects.length) s.subjects = Array.from(new Set(newSubjects));
+
+    // passwords
+    const newPw = {
+      admin: $("#pwAdmin")?.value ?? pw.admin,
+      deputy: $("#pwDeputy")?.value ?? pw.deputy,
+      teacher: $("#pwTeacher")?.value ?? pw.teacher,
+    };
+    setPasswords(newPw);
+    dbData.meta.passwords = getPasswords();
 
     closeModal();
     hydrateControls();
@@ -1114,10 +1360,20 @@ async function exportExcel() {
       // cells per class
       for (let ci = 0; ci < classes.length; ci++) {
         const cl = classes[ci];
-        const cell = getCell(termId, cl.id, day, lessonNo);
-        const text = cell ? [cell.subject, teacherNameById(cell.teacherId), cell.room ? `каб. ${cell.room}` : ""]
-          .filter(Boolean)
-          .join("\n") : "";
+        const raw = getCell(termId, cl.id, day, lessonNo);
+        const parts = normalizeCell(raw);
+        const text = parts.length
+          ? parts
+              .map((p) => {
+                const a = [
+                  fmtSubjectNote(p),
+                  (p?.teacherId || "") ? teacherNameById(p.teacherId) : "",
+                  (p?.room || "").trim() ? `каб. ${(p.room || "").trim()}` : "",
+                ].filter(Boolean);
+                return a.join("\n");
+              })
+              .join("\n\n/\n\n")
+          : "";
         const xc = ws.getCell(r, 4 + ci);
         xc.value = text;
         applyCellStyle(xc, { alignment: { horizontal: "center" } });

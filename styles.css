@@ -485,6 +485,14 @@ table.mini input:focus, table.mini select:focus{
   margin:0 4px;
 }
 
+/* Teacher view lines */
+.tcell-line{display:block; margin:2px 0; line-height:1.25}
+.tcell-subj{font-weight:700; font-size:13px}
+.tcell-class{color:var(--muted); font-size:12px; margin-left:6px}
+
+/* Small separator inside modal */
+.hr{height:1px; background:var(--line); margin:12px 0}
+
 /* Модальное окно - убрана прозрачность */
 .modal{
   position:fixed;
